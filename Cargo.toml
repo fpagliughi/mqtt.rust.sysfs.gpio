@@ -4,3 +4,14 @@ version = "0.1.0"
 authors = ["Frank Pagliughi <fpagliughi@mindspring.com>"]
 
 [dependencies]
+paho-mqtt = { git = "https://github.com/eclipse/paho.mqtt.rust" }
+#sysfs_gpio = { "version = 0.5, features = tokio" }
+futures = "0.1.15"
+tokio-core = "0.1.17"
+log = "0.4.1"
+env_logger = "0.5.10"
+
+[dependencies.sysfs_gpio]
+version = "0.5"
+features = [ "tokio" ]
+
