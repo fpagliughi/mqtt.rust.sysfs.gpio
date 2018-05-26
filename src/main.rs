@@ -41,7 +41,7 @@ fn stream(cli: mqtt::AsyncClient, pin_nums: Vec<u64>) -> sysfs_gpio::Result<()> 
 
                 println!("Pin {} changed value to {}", i, val);
 
-                let msg = mqtt::Message::new(topic, body, 1);
+                let msg = mqtt::Message::new(&topic, body, 1);
                 cli_cb.publish(msg);
 
                 Ok(())
