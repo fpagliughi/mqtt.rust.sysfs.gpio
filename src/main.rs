@@ -1,6 +1,6 @@
 // main.rs
 //
-// The main source for the 'gpio-intr' test application.
+// The main source for the 'mqtt-rust-sysfs-gpio' application.
 // This tests the use of the sysfs_gpio crate for interrupting on GPIO 
 // pin state changes.
 //
@@ -17,6 +17,9 @@ use tokio_core::reactor::Core;
 use futures::{Future, Stream};
 
 // --------------------------------------------------------------------------
+// Uses Tokio in the gpio crate to create a stream of input events. 
+// For each one we emit an MQTT message using the pin number in the topic 
+// and the value (as UTF-8 '1' or '0') as the payload.
 
 fn stream(cli: mqtt::AsyncClient, pin_nums: Vec<u64>) -> sysfs_gpio::Result<()> {
     let pins: Vec<_> = pin_nums.iter().map(|&p| (p, Pin::new(p))).collect();
@@ -28,13 +31,17 @@ fn stream(cli: mqtt::AsyncClient, pin_nums: Vec<u64>) -> sysfs_gpio::Result<()> 
         pin.export()?;
         pin.set_direction(Direction::In)?;
         pin.set_edge(Edge::BothEdges)?;
+
         let cli_cb = cli.clone();
+
         handle.spawn(pin.get_value_stream(&handle)?
             .for_each(move |val| {
-                let body = format!("Pin {} changed value to {}", i, val);
-                println!("{}", body);   //"Pin {} changed value to {}", i, val);
+                let topic = format!("event/gpio/in/{}", i);
+                let body = format!("{}", val);
 
-                let msg = mqtt::Message::new("test", body, 0);
+                println!("Pin {} changed value to {}", i, val);
+
+                let msg = mqtt::Message::new(topic, body, 1);
                 cli_cb.publish(msg);
 
                 Ok(())
@@ -49,6 +56,8 @@ fn stream(cli: mqtt::AsyncClient, pin_nums: Vec<u64>) -> sysfs_gpio::Result<()> 
 }
 
 // --------------------------------------------------------------------------
+// Main parses the command line for the list of pins to monitor, establishes
+// a connection to the MQTT broker, and starts the stream running.
 
 fn main() {
     let pins: Vec<u64> = env::args().skip(1)
