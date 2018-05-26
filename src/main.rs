@@ -36,7 +36,7 @@ fn stream(cli: mqtt::AsyncClient, pin_nums: Vec<u64>) -> sysfs_gpio::Result<()> 
 
         handle.spawn(pin.get_value_stream(&handle)?
             .for_each(move |val| {
-                let topic = format!("event/gpio/in/{}", i);
+                let topic = format!("events/gpio/in/{}", i);
                 let body = format!("{}", val);
 
                 println!("Pin {} changed value to {}", i, val);
